@@ -1,0 +1,25 @@
+
+html {
+    background-color: #eef;
+    font-family     : monospace;
+    font-size       : 18px;
+}
+.myButton {
+    margin        : 8px;
+    border        : solid 2px #000;
+    border-radius : 4px;
+    background    : #488;
+    color         : #fff;
+    font-size     : 22px;
+    font-weight   : bold;
+    cursor        : pointer;
+}
+.error {
+    color         : #f22;
+}
+input {
+    display : block;
+    margin  : 8px;
+}
+
+
