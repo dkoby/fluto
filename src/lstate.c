@@ -37,6 +37,7 @@
 #include "lscript/init0.h"
 #include "lscript/init1.h"
 #include "lscript/process.h"
+#include "lscript/util.h"
 #include "lstate.h"
 
 #if 0
@@ -47,29 +48,44 @@ static int _debugPrint(lua_State *L);
 static int _getContent(lua_State *L);
 static int _writeSock(lua_State *L);
 
+static struct script_t {
+    const char *data;
+    int size;
+    const char *name;
+} scripts[] = {
+    {utilScript, sizeof(utilScript), "utilScript"},
+    {init0Script, sizeof(init0Script), "init0Script"},
+    {NULL, 0},
+};
+
+
 /*
  * Initialize lua state on client creation.
  */
 int lstateInit0(struct client_t *client)
 {
     lua_State *L = client->luaState;
+    struct script_t *script;
 
     lua_pushcfunction(L, _debugPrint); lua_setglobal(L, "debugPrint");
 
-    if (luaL_loadbufferx(L, init0Script, sizeof(init0Script), "init0Script", "b") != LUA_OK)
+    for (script = scripts; script->data != NULL; script++)
     {
-        DEBUG_CLIENT(DLEVEL_NOISE, "Failed to load init0 script: \"%s\".",
-                lua_tostring(L, -1));
-        lua_pop(L, 1);
-        return -1;
+        if (luaL_loadbufferx(L, script->data, script->size, script->name, "b") != LUA_OK)
+        {
+            DEBUG_CLIENT(DLEVEL_NOISE, "(E) Failed to load init0 script: \"%s\".",
+                    lua_tostring(L, -1));
+            lua_pop(L, 1);
+            return -1;
+        }
+        if (lua_pcall(L, 0, LUA_MULTRET, 0) != LUA_OK)
+        {
+            DEBUG_CLIENT(DLEVEL_NOISE, "(E) Failed to execute init0 script: \"%s\".",
+                    lua_tostring(L, -1));
+            lua_pop(L, 1);
+            return -1;
+        }     
     }
-    if (lua_pcall(L, 0, LUA_MULTRET, 0) != LUA_OK)
-    {
-        DEBUG_CLIENT(DLEVEL_NOISE, "Failed to execute init0 script: \"%s\".",
-                lua_tostring(L, -1));
-        lua_pop(L, 1);
-        return -1;
-    }     
 
     lua_pushlightuserdata(L, client); lua_setglobal(L, "client");
 
@@ -113,14 +129,14 @@ int lstateInit1(struct client_t *client)
 
     if (luaL_loadbufferx(L, init1Script, sizeof(init1Script), "init1Script", "b") != LUA_OK)
     {
-        DEBUG_CLIENT(DLEVEL_NOISE, "Failed to load init1 script: \"%s\".",
+        DEBUG_CLIENT(DLEVEL_NOISE, "(E) Failed to load init1 script: \"%s\".",
                 lua_tostring(L, -1));
         lua_pop(L, 1);
         return -1;
     }
     if (lua_pcall(L, 0, LUA_MULTRET, 0) != LUA_OK)
     {
-        DEBUG_CLIENT(DLEVEL_NOISE, "Failed to execute init1 script: \"%s\".",
+        DEBUG_CLIENT(DLEVEL_NOISE, "(E) Failed to execute init1 script: \"%s\".",
                 lua_tostring(L, -1));
         lua_pop(L, 1);
         return -1;
@@ -148,14 +164,14 @@ int lstateProcessRequest(struct client_t *client, int httpError)
 
     if (luaL_loadbufferx(L, processScript, sizeof(processScript), "processScript", "b") != LUA_OK)
     {
-        DEBUG_CLIENT(DLEVEL_NOISE, "Failed to load process script: \"%s\".",
+        DEBUG_CLIENT(DLEVEL_NOISE, "(E) Failed to load process script: \"%s\".",
                 lua_tostring(L, -1));
         lua_pop(L, 1);
         return 0;
     }
     if (lua_pcall(L, 0, LUA_MULTRET, 0) != LUA_OK)
     {
-        DEBUG_CLIENT(DLEVEL_NOISE, "Failed to execute process script: \"%s\".",
+        DEBUG_CLIENT(DLEVEL_NOISE, "(E) Failed to execute process script: \"%s\".",
                 lua_tostring(L, -1));
         lua_pop(L, 1);
         return 0;

@@ -59,7 +59,7 @@ INIT_LUA_H   = lua/init.h
 BIN2C        = lua/bin2c.lua
 
 $(DEPFILE):
-	-$(CC) $(CFLAGS) -MM $(C_FILES) > $(DEPFILE)
+	$(CC) $(CFLAGS) -MM $(C_FILES) > $(DEPFILE)
 -include $(DEPFILE)
 depend: $(DEPFILE)
 

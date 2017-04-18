@@ -13,6 +13,7 @@ BIN2C = $(ROOT_DIR)/bin2c.lua
 SCRIPTS += init0.lua
 SCRIPTS += init1.lua
 SCRIPTS += process.lua
+SCRIPTS += util.lua
 
 #STRIP = -s
 

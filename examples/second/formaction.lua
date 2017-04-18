@@ -1,5 +1,5 @@
 if true then
-    local s = util.stringBuf:new()
+    local sb = util.StringBuilder:new()
 
     if request.contentType and string.match(request.contentType, 'multipart/.*') then
         if request.contentLength then
@@ -11,23 +11,23 @@ if true then
                     chunkSize = n
                 end
 
-                local s = request.getContent(chunkSize)
-                if #s == 0 then
+                local chunk = request.getContent(chunkSize)
+                if #chunk == 0 then
                     break
                 end
-                util.debugPrint(DLEVEL_NOISE, 'content: "', s, '"')
-                n = n - #s
+                util.debugPrint(DLEVEL_NOISE, 'content: "', chunk, '"')
+                n = n - #chunk
                 util.debugPrint(DLEVEL_NOISE, 'remain: ', n)
             end
         end
     end
     util.debugPrint(DLEVEL_NOISE, 'done')
 
-    s:pn('{')
-    s:pn('"result" : "ok"')
-    s:pn('}')
+    sb:appendn('{')
+    sb:appendn('"result" : "ok"')
+    sb:appendn('}')
 
     response.contentType = "application/json"
-    response:sendFull(HTTP_ERROR_200_OK, s:get())
+    response:sendFull(HTTP_ERROR_200_OK, sb:get())
 end
 

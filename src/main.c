@@ -59,8 +59,8 @@ static void _printHelp()
     debugPrint(DLEVEL_SYS, "Options:");
     debugPrint(DLEVEL_SYS, "    -h          Print this help.");
     debugPrint(DLEVEL_SYS, "    -p<Port>    Bind to port.");
-    debugPrint(DLEVEL_SYS, "    -r<Dir>     Do chroot to directory.");
-    debugPrint(DLEVEL_SYS, "    -D<Dir>     Change to directory.");
+    debugPrint(DLEVEL_SYS, "    -r=<Dir>    Do chroot to directory.");
+    debugPrint(DLEVEL_SYS, "    -D=<Dir>    Change to directory.");
     debugPrint(DLEVEL_SYS, "    -u<User>    User to change to after startup.");
     debugPrint(DLEVEL_SYS, "    -d<L>       Debug level (0, 1, 2, 3, 4), default 3");
     debugPrint(DLEVEL_SYS, "                    0    SILENT ");
@@ -169,10 +169,10 @@ int main(int argc, char **argv)
                 debugPrint(DLEVEL_ERROR, "Invalid value of \"-p\" option.");
                 terminate(EXIT_CODE_ERROR);
             }
-        } else if (strlen(*arg) >= 3 && strncmp("-r", *arg, 2) == 0) {
-            chRoot = *arg + 2;
-        } else if (strlen(*arg) >= 3 && strncmp("-D", *arg, 2) == 0) {
-            chDir = *arg + 2;
+        } else if (strlen(*arg) >= 4 && strncmp("-r=", *arg, 3) == 0) {
+            chRoot = *arg + 3;
+        } else if (strlen(*arg) >= 4 && strncmp("-D=", *arg, 3) == 0) {
+            chDir = *arg + 3;
         } else if (strlen(*arg) >= 3 && strncmp("-u", *arg, 2) == 0) {
             user = *arg + 2;
         }

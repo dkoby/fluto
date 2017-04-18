@@ -24,7 +24,8 @@ function process()
                 handlerMatch = true
                 local ok, msg = pcall(dofile, path)
                 if not ok then
-                    debugPrint(DLEVEL_NOISE, "(E) failed to execute file " .. path .. ": " .. msg)
+--                    debugPrint(DLEVEL_NOISE, "(E) failed to execute file " .. path .. ": " .. msg)
+                    error(msg)
                 end
                 return
             end

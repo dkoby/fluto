@@ -2,9 +2,9 @@
 --
 --
 if true then
-    local s = util.stringBuf:new()
+    local sb = util.StringBuilder:new()
 
-    s:p([[
+    sb:append([[
 <!DOCTYPE html>
 <html>
 <head>
@@ -24,6 +24,6 @@ if true then
 </html>
     ]]);
 
-    response:sendFull(HTTP_ERROR_200_OK, s:get())
+    response:sendFull(HTTP_ERROR_200_OK, sb:get())
 end
 

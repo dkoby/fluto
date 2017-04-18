@@ -29,7 +29,7 @@ clean:
 	rm -f  $(TARGET) $(OBJS) $(DEPFILE)
 
 $(DEPFILE):
-	-$(CC) $(CFLAGS) -MM $(C_FILES) > $(DEPFILE)
+	$(CC) $(CFLAGS) -MM $(C_FILES) > $(DEPFILE)
 -include $(DEPFILE)
 depend: $(DEPFILE)
 

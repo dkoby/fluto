@@ -1,5 +1,5 @@
 if true then
-    local s = util.stringBuf:new()
+    local sb = util.StringBuilder:new()
 
     --
     -- Global variable. Preserved on keep-alive connection.
@@ -9,11 +9,11 @@ if true then
     end
     counter = counter + 1
 
-    s:pn('{')
-    s:pn('"result" : "', counter, '"')
-    s:pn('}')
+    sb:appendn('{')
+    sb:appendn('"result" : "', counter, '"')
+    sb:appendn('}')
 
     response.contentType = "application/json"
-    response:sendFull(HTTP_ERROR_200_OK, s:get())
+    response:sendFull(HTTP_ERROR_200_OK, sb:get())
 end
 
