@@ -33,25 +33,10 @@
 struct mthreadMutex_t {
     pthread_mutex_t mutex;
 };
-struct mthread_t {
-    pthread_t thread;
-};
-
 void mthreadMutexInitW(struct mthreadMutex_t *mutex);
 void mthreadMutexDestroyW(struct mthreadMutex_t *mmutex);
 void mthreadMutexLockW(struct mthreadMutex_t *mmutex);
 void mthreadMutexUnlockW(struct mthreadMutex_t *mmutex);
-void mthreadCreateW(
-        struct mthread_t *mthread, void *(*startRoutine)(void *), void *startArg);
-void mthreadJoinW(struct mthread_t *mthread);
-#if 0
-void mthreadKillW(struct mthread_t *mthread, int sig);
-#endif
-void mthreadCancelW(struct mthread_t *mthread);
-void mthreadDetachW(struct mthread_t *mthread);
-void mthreadInit();
-#define MTHREAD_CLEANUP_PUSH(cleanup, arg) pthread_cleanup_push(cleanup, arg)
-#define MTHREAD_CLEANUP_POP()              pthread_cleanup_pop(1 /* execute */)
 
 #endif
 

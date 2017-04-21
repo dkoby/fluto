@@ -28,24 +28,22 @@
 #ifndef _CLIENT_H
 #define _CLIENT_H
 
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
+#include <pthread.h>
 /* */
-#include "mthread.h"
+#include <lua.h>
+/* */
 #include "token.h"
 
 struct client_t {
     int sock;
     char *addr;
     int port;
-    struct mthread_t mthread;
+    pthread_t thread;
+    int rthread;
     struct token_t token;
     lua_State *luaState;
 
     int (*getChars)(char *, int, void *);
-
-
 
     /*
      * Fields from HTTP request header.

@@ -33,45 +33,14 @@
 #include "main.h"
 #include "mthread.h"
 
-/*
- * RETURN
- *     0 on success, error code otherwise.
- */
-static int mthreadMutexInit(struct mthreadMutex_t *mmutex)
-{
-    return pthread_mutex_init(&mmutex->mutex, NULL);
-}
-/*
- * RETURN
- *     0 on success, error code otherwise.
- */
-static int mthreadMutexDestroy(struct mthreadMutex_t *mmutex)
-{
-    return pthread_mutex_destroy(&mmutex->mutex);
-}
-/*
- * RETURN
- *     0 on success, error code otherwise.
- */
-static int mthreadMutexLock(struct mthreadMutex_t *mmutex)
-{
-    return pthread_mutex_lock(&mmutex->mutex);
-}
-/*
- * RETURN
- *     0 on success, error code otherwise.
- */
-static int mthreadMutexUnlock(struct mthreadMutex_t *mmutex)
-{
-    return pthread_mutex_unlock(&mmutex->mutex);
-}
+
 /*
  *
  */
 void mthreadMutexInitW(struct mthreadMutex_t *mmutex)
 {
     int r;
-    r = mthreadMutexInit(mmutex);
+    r = pthread_mutex_init(&mmutex->mutex, NULL);
     if (r != 0)
     {
         debugPrint(DLEVEL_ERROR, "Mutex init failed, (error %d).", r);
@@ -85,7 +54,7 @@ void mthreadMutexInitW(struct mthreadMutex_t *mmutex)
 void mthreadMutexDestroyW(struct mthreadMutex_t *mmutex)
 {
     int r;
-    r = mthreadMutexDestroy(mmutex);
+    r = pthread_mutex_destroy(&mmutex->mutex);
     if (r != 0)
     {
         debugPrint(DLEVEL_ERROR, "Mutex destroy failed, (error %d).", r);
@@ -99,7 +68,7 @@ void mthreadMutexDestroyW(struct mthreadMutex_t *mmutex)
 void mthreadMutexLockW(struct mthreadMutex_t *mmutex)
 {
     int r;
-    r = mthreadMutexLock(mmutex);
+    r = pthread_mutex_lock(&mmutex->mutex);
     if (r != 0)
     {
         debugPrint(DLEVEL_ERROR, "Mutex lock failed, (error %d).", r);
@@ -113,141 +82,11 @@ void mthreadMutexLockW(struct mthreadMutex_t *mmutex)
 void mthreadMutexUnlockW(struct mthreadMutex_t *mmutex)
 {
     int r;
-    r = mthreadMutexUnlock(mmutex);
+    r = pthread_mutex_unlock(&mmutex->mutex);
     if (r != 0)
     {
         debugPrint(DLEVEL_ERROR, "Mutex unlock failed, (error %d).", r);
         exit(EXIT_CODE_ERROR);
-    }
-}
-/*
- *
- */
-static int mthreadCreate(struct mthread_t *mthread, void *(*startRoutine)(void *), void *startArg)
-{
-    return pthread_create(&mthread->thread, NULL, startRoutine, startArg);
-}
-/*
- *
- */
-void mthreadCreateW(
-        struct mthread_t *mthread, void *(*startRoutine)(void *), void *startArg)
-{
-    int r;
-    r = mthreadCreate(mthread, startRoutine, startArg);
-    if (r != 0)
-    {
-        debugPrint(DLEVEL_ERROR, "Thread create failed, (error %d).", r);
-        exit(EXIT_CODE_ERROR);
-    }
-}
-/*
- *
- */
-static int mthreadJoin(struct mthread_t *mthread)
-{
-    return pthread_join(mthread->thread, NULL);
-}
-/*
- *
- */
-void mthreadJoinW(struct mthread_t *mthread)
-{
-    int r;
-    r = mthreadJoin(mthread);
-    if (r != 0)
-    {
-        debugPrint(DLEVEL_ERROR, "Thread join failed, (error %d).", r);
-        exit(EXIT_CODE_ERROR);
-    }
-}
-#if 0
-/*
- *
- */
-static int mthreadKill(struct mthread_t *mthread, int sig)
-{
-    return pthread_kill(mthread->thread, sig);
-}
-/*
- *
- */
-void mthreadKillW(struct mthread_t *mthread, int sig)
-{
-    int r;
-    r = mthreadKill(mthread, sig);
-    if (r != 0)
-    {
-        debugPrint(DLEVEL_ERROR, "Thread kill failed, (%d).", r);
-        exit(EXIT_CODE_ERROR);
-    }
-}
-#endif
-/*
- *
- */
-static int mthreadCancel(struct mthread_t *mthread)
-{
-    return pthread_cancel(mthread->thread);
-}
-/*
- *
- */
-void mthreadCancelW(struct mthread_t *mthread)
-{
-    int r;
-    r = mthreadCancel(mthread);
-    if (r != 0)
-    {
-        debugPrint(DLEVEL_ERROR, "Thread cancel failed, (%d).", r);
-        exit(EXIT_CODE_ERROR);
-    }
-}
-/*
- *
- */
-static int mthreadDetach(struct mthread_t *mthread)
-{
-    return pthread_detach(mthread->thread);
-}
-/*
- *
- */
-void mthreadDetachW(struct mthread_t *mthread)
-{
-    int r;
-    r = mthreadDetach(mthread);
-    if (r != 0)
-    {
-        debugPrint(DLEVEL_ERROR, "Thread detach failed, (%d).", r);
-        exit(EXIT_CODE_ERROR);
-    }
-}
-
-/*
- * Must be called in running thread. Generic thread initialization.
- *
- * ARGS
- *     cleanup    Cleanup callback.
- *     context    Argument to path to cleanup callback.
- */
-void mthreadInit()
-{
-    int r;
-    int oldstate, oldtype;
-
-    /*
-     * Enable cancelation points for functions read(), select(), ... .
-     */
-    r = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &oldstate);
-    if (r != 0)
-    {
-        debugPrint(DLEVEL_ERROR, "%s, setcancelstate", __FUNCTION__);
-    }
-    r = pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &oldtype);
-    if (r != 0)
-    {
-        debugPrint(DLEVEL_ERROR, "%s, setcanceltype.", __FUNCTION__);
     }
 }
 

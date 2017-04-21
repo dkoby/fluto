@@ -54,7 +54,7 @@ static void _printHead()
 static void _printHelp()
 {
     debugPrint(DLEVEL_SYS, "Usage:");
-    debugPrint(DLEVEL_SYS, "    nomo <OPTIONS>");
+    debugPrint(DLEVEL_SYS, "    fluto <OPTIONS>");
     debugPrint(DLEVEL_SYS, "");
     debugPrint(DLEVEL_SYS, "Options:");
     debugPrint(DLEVEL_SYS, "    -h          Print this help.");

@@ -251,7 +251,10 @@ void serverTerminate()
         debugPrint(DLEVEL_INFO, "Closing server socket.");
         close(server.sock);
     }
-
+    /*
+     * Stop all clients.
+     */
+    mthreadMutexLockW(&server.mmutex); /* NOTE lock */
     if (server.numClients > 0)
     {
         struct llist_t *lc, *ln;
@@ -261,12 +264,34 @@ void serverTerminate()
         while (lc)
         {
             ln = lc->next;
-            /* NOTE client will remove self from server's list */
             clientStop(lc->p);
             lc = ln;
         }
     }
-    /* List of clients must be at this point. */
+    mthreadMutexUnlockW(&server.mmutex); /* NOTE unlock */
+
+    /*
+     * XXX Need wait for all clients termination.
+     * Clients will remove self from server's list on termination.
+     * Imposible to perform pthread_join, because client list will be
+     * dinamicaly changed. Make simple sleep.
+     */
+    {
+        int nwait;
+        int numClients;
+
+        nwait = 10;
+        do
+        {
+            mthreadMutexLockW(&server.mmutex); /* NOTE lock */
+            numClients = server.numClients;
+            mthreadMutexUnlockW(&server.mmutex); /* NOTE unlock */
+            if (numClients <= 0)
+                break;
+            debugPrint(DLEVEL_INFO, "Wait clients...");
+            sleep(1);
+        } while (nwait-- > 0);
+    }
 
     server.clientList = NULL;
     server.numClients = 0;

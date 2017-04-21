@@ -25,16 +25,20 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * 
  */
+#include <pthread.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
+#include <unistd.h>
+/* */
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
 /* */
 #include "client.h"
 #include "common.h"
 #include "debug.h"
 #include "http.h"
 #include "lstate.h"
-#include "mthread.h"
 #include "server.h"
 #include "token.h"
 #ifdef EXTENSION_LSQLITE3
@@ -56,14 +60,13 @@ static int _getChars(char *buf, int len, void *arg);
  */
 int clientInit(struct client_t *client, int sock, char *addr, int port)
 {
+    client->rthread = -1;
     client->sock = sock;
     client->port = port;
     client->addr = malloc(strlen(addr) + 1 /* 0-terminator */);
     if (!client->addr)
         goto error;
     strcpy(client->addr, addr);
-    /* */
-    client->request.keepAlive = 0;
 
     DEBUG_CLIENT(DLEVEL_NOISE, "%s", "Start client");
 
@@ -89,7 +92,13 @@ int clientInit(struct client_t *client, int sock, char *addr, int port)
     if (lstateInit0(client) < 0)
         goto error;
 
-    mthreadCreateW(&client->mthread, _run, client);
+    client->rthread = pthread_create(&client->thread, NULL, _run, client);
+    if (client->rthread != 0)
+    {
+        DEBUG_CLIENT(DLEVEL_ERROR, "Thread create failed, (error %d).", client->rthread);
+        goto error;
+    }
+
     return 0;
 error:
     serverRemoveClient(client);
@@ -107,9 +116,18 @@ static int _getChars(char *buf, int len, void *arg)
  */
 void clientStop(struct client_t *client)
 {
+    int r;
+
     DEBUG_CLIENT(DLEVEL_INFO, "%s", "Stopping client");
-    mthreadCancelW(&client->mthread);
-    mthreadJoinW(&client->mthread);
+
+    r = pthread_cancel(client->thread);
+    if (r != 0)
+    {
+        DEBUG_CLIENT(DLEVEL_ERROR, "Thread cancel failed, (%d).", r);
+        goto error;
+    }
+error:
+    ;
 }
 /*
  * Called by server when client removed from server's list.
@@ -119,7 +137,14 @@ void clientDestroy(void *arg)
     struct client_t *client = arg;
 
     /* Release resource used by thread. Alternative to join. */
-    mthreadDetachW(&client->mthread);
+    if (client->rthread == 0)
+    {
+        int r;
+
+        r = pthread_detach(client->thread);
+        if (r != 0)
+            debugPrint(DLEVEL_ERROR, "Thread detach failed, (%d).", r);
+    }
 
     close(client->sock);
     if (client->addr)
@@ -127,8 +152,11 @@ void clientDestroy(void *arg)
         free(client->addr);
         client->addr = NULL;
     }
+
     tokenDestroy(&client->token);
-    lua_close(client->luaState);
+
+    if (client->luaState)
+        lua_close(client->luaState);
 
     DEBUG_CLIENT(DLEVEL_NOISE, "%s", "Client destroyed");
     free(client);
@@ -140,15 +168,32 @@ static void * _run(void *arg)
 {
     struct client_t *client = arg;
 
-    mthreadInit();
-    MTHREAD_CLEANUP_PUSH(_done, client);
+    {
+        int r;
+        int oldstate, oldtype;
+
+        /*
+         * Enable cancelation points for functions read(), select(), ... .
+         */
+        r = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &oldstate);
+        if (r != 0)
+        {
+            DEBUG_CLIENT(DLEVEL_ERROR, "%s, setcancelstate", __FUNCTION__);
+        }
+        r = pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &oldtype);
+        if (r != 0)
+        {
+            DEBUG_CLIENT(DLEVEL_ERROR, "%s, setcanceltype.", __FUNCTION__);
+        }
+    }
+    pthread_cleanup_push(_done, client);
 
     DEBUG_CLIENT(DLEVEL_NOISE, "%s", "Client run");
     while (_service(client))
         ;
     DEBUG_CLIENT(DLEVEL_NOISE, "%s", "Client done");
 
-    MTHREAD_CLEANUP_POP();
+    pthread_cleanup_pop(1 /* execute */);
     return (void*)0;
 }
 /*
@@ -173,11 +218,16 @@ static int _service(struct client_t *client)
     int error;
 
     tokenReset(&client->token);
+    /* */
     if (lstateInit1(client) < 0)
         return 0;
+    /* */
+    client->request.keepAlive = 0;
+    /* */
     error = httpProcessRequest(client);
     if (error < 0)
         return 0;
+    /* */
     if (lstateProcessRequest(client, error))
     {
         if (client->request.keepAlive)
