@@ -15,7 +15,7 @@ if true then
 <body>
 <form id="testForm">
 </form>
-<input name="image" type="file" accept=".txt,.bin" form="testForm">
+<input name="image" type="file" id="myFile" accept=".txt,.bin" form="testForm">
 <input name="userText" type="text" form="testForm">
 <button onclick="clickAction()" class="myButton">Confirm</button>
 <div class="error" id="error"></div>

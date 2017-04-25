@@ -56,6 +56,11 @@ function process()
             util.outputFile(path, "image/vnd.microsoft.icon")
             return
         end
+        path = string.match(request.path, "/(.*%.png)$")
+        if path then
+            util.outputFile(path, "image/png")
+            return
+        end
     end
     --
     -- Not found.

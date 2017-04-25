@@ -1,7 +1,8 @@
 if true then
     local sb = util.StringBuilder:new()
 
-    if request.contentType and string.match(request.contentType, 'multipart/.*') then
+    if request.contentType then
+        util.debugPrint(DLEVEL_NOISE, "contentType: " .. request.contentType);
         if request.contentLength then
             local n = request.contentLength
             while n > 0 do

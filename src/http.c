@@ -898,6 +898,26 @@ static int _parseHeaderValue(struct client_t *client)
                     break;
                 }
                 break;
+            } else {
+                tokenDrop(token);
+                if (!TOKEN_GET(TOKEN_TYPE_FSLASH))
+                {
+                    DEBUG_CLIENT(DLEVEL_NOISE, "%s", "(E) No \"/\" character in \"Content-Type\" separator");
+                    return HTTP_ERROR_400_BAD_REQUEST;
+                }
+                lstateAppendRequestField(client->luaState, "contentType", "/");
+                tokenDrop(token);
+                if (!(tval = TOKEN_GET(TOKEN_TYPE_TCHARS)))
+                {
+                    DEBUG_CLIENT(DLEVEL_NOISE, "%s", "(E) \"Content-Type\" value 2 missing");
+                    return HTTP_ERROR_400_BAD_REQUEST;
+                }
+                lstateAppendRequestFieldL(client->luaState, "contentType", tval, tlen);
+                tokenDrop(token);
+                /* Skip any trailing data */
+                if (TOKEN_GET(TOKEN_TYPE_ANY_NOT_CRLF))
+                    tokenDrop(token);
+                break;
             }
             tokenDrop(token);
         }

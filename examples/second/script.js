@@ -23,6 +23,7 @@ function clickAction() {
         }
     }
     request.open("POST", "formaction");
-    request.send(new FormData(document.getElementById("testForm")));
+    request.send(document.getElementById('myFile').files[0]);
+//    request.send(new FormData(document.getElementById("testForm")));
 }
 
