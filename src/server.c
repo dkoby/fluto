@@ -210,9 +210,10 @@ void serverRun(int portNumber)
                         debugPrint(DLEVEL_WARNING, "ERROR on inet_ntoa");
                         break;
                     }
+                    clientAddrLen = sizeof(clientAddr);
                     if (getpeername(clientSock, (struct sockaddr*)&clientAddr, &clientAddrLen) < 0)
                     {
-                        debugPrint(DLEVEL_WARNING, "ERROR on getpeername");
+                        debugPrint(DLEVEL_WARNING, "ERROR on getpeername: %s.", strerror(errno));
                         break;
                     }
 
