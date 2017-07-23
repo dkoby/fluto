@@ -34,7 +34,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 /* */
-#include "debug.h"
+#include <debug.h>
 #include "main.h"
 #include "server.h"
 #include "version.h"
@@ -48,7 +48,7 @@ struct passwd *pwd = NULL;;
 
 static void _printHead()
 {
-    debugPrint(DLEVEL_SYS, "Fluto v." VERSION_STRING " (c) 2016-2017 Dmitry Kobylin.");
+    debugPrint(DLEVEL_SYS, "Fluto v" VERSION_STRING " (c) 2016-2017 Dmitry Kobylin.");
     debugPrint(DLEVEL_SYS, "");
 }
 static void _printHelp()
@@ -68,7 +68,6 @@ static void _printHelp()
     debugPrint(DLEVEL_SYS, "                    2    WARNING");
     debugPrint(DLEVEL_SYS, "                    3    INFO   ");
     debugPrint(DLEVEL_SYS, "                    4    NOISE  ");
-    debugPrint(DLEVEL_SYS, "");
     debugPrint(DLEVEL_SYS, "");
 
     exit(EXIT_CODE_ERROR);
@@ -176,7 +175,6 @@ int main(int argc, char **argv)
         } else if (strlen(*arg) >= 3 && strncmp("-u", *arg, 2) == 0) {
             user = *arg + 2;
         }
-
         arg++;
     }
 

@@ -22,6 +22,9 @@ function clickAction() {
             }
         }
     }
+    request.onprogress = function() {
+        console.log("PROGRESS ");
+    }
     request.open("POST", "formaction");
     request.send(document.getElementById('myFile').files[0]);
 //    request.send(new FormData(document.getElementById("testForm")));

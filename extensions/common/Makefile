@@ -4,18 +4,20 @@
 ################################################################################
 ROOT_DIR = ../..
 
-TARGET = $(ROOT_DIR)/liblsqlite3.a
+TARGET = $(ROOT_DIR)/libcommon.a
 ########################################
 #
 #
 ########################################
-CFLAGS += -I$(ROOT_DIR)/extensions/lua
 
 ########################################
 #
 #
 ########################################
-C_FILES += lsqlite3.c
+C_FILES += common.c
+C_FILES += debug.c
+C_FILES += llist.c
+C_FILES += stimer.c
 
 C_OBJS  = $(foreach obj,$(C_FILES) ,$(patsubst %c, %o, $(obj)))
 OBJS += $(C_OBJS)
@@ -28,7 +30,7 @@ all: depend $(TARGET)
 clean:
 	rm -f  $(TARGET) $(OBJS) $(DEPFILE)
 
-$(DEPFILE): Makefile
+$(DEPFILE):
 	$(CC) $(CFLAGS) -MM $(C_FILES) > $(DEPFILE)
 -include $(DEPFILE)
 depend: $(DEPFILE)

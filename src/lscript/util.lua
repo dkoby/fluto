@@ -77,20 +77,20 @@ function util.StringBuilder:new()
     setmetatable(obj, self)
     self.__index = self
 
-    obj.val = ""
+    obj.val = {}
     return obj
 end
 function util.StringBuilder:append(...)
     for i, v in ipairs({...}) do
-        self.val = self.val .. v
+        table.insert(self.val, v)
     end
 end
 function util.StringBuilder:appendn(...)
     self:append(...)
-    self:append('\n')
+    table.insert(self.val, v)
 end
 function util.StringBuilder:get()
-    return self.val
+    return table.concat(self.val)
 end
 -------------------------------------------------------------------------------
 

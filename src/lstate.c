@@ -32,7 +32,7 @@
 #include <lualib.h>
 #include <lauxlib.h>
 /* */
-#include "debug.h"
+#include <debug.h>
 #include "http.h"
 #include "lscript/init0.h"
 #include "lscript/init1.h"
@@ -55,7 +55,7 @@ static struct script_t {
 } scripts[] = {
     {utilScript, sizeof(utilScript), "utilScript"},
     {init0Script, sizeof(init0Script), "init0Script"},
-    {NULL, 0},
+    {NULL, 0, NULL},
 };
 
 
@@ -113,6 +113,7 @@ int lstateInit0(struct client_t *client)
     lua_setfield(L, -2, "writeSock"); /* [response]->TOS */
     lua_pop(L, 1);                    /* ->TOS */
 
+    
 #if (1 && (defined DEBUG_THIS))
     /* Stack MUST be empty (gettop return 0). */
     debugPrint(DLEVEL_NOISE, "%s stack \"%d\" [sock %d].",

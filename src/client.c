@@ -34,9 +34,9 @@
 #include <lualib.h>
 #include <lauxlib.h>
 /* */
+#include <common.h>
+#include <debug.h>
 #include "client.h"
-#include "common.h"
-#include "debug.h"
 #include "http.h"
 #include "lstate.h"
 #include "server.h"
@@ -187,6 +187,18 @@ static void * _run(void *arg)
         }
     }
     pthread_cleanup_push(_done, client);
+
+#if 0
+    {
+        pthread_attr_t attr;
+        size_t ssize;
+
+        if (pthread_attr_getstacksize(&attr, &ssize) == 0)
+        {
+            DEBUG_CLIENT(DLEVEL_NOISE, "%s%d", "STACK SIZE: ", ssize);
+        }
+    }
+#endif
 
     DEBUG_CLIENT(DLEVEL_NOISE, "%s", "Client run");
     while (_service(client))

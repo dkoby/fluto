@@ -38,10 +38,10 @@
 #include <arpa/inet.h>
 #include <signal.h>
 /* */
-#include "main.h"
-#include "debug.h"
+#include <debug.h>
+#include <llist.h>
 #include "client.h"
-#include "llist.h"
+#include "main.h"
 #include "mthread.h"
 
 #define SERVER_LISTEN_QUEUE_LENGTH    100
@@ -112,6 +112,14 @@ void serverRun(int portNumber)
         debugPrint(DLEVEL_ERROR, "Failed to open server socket, %s", strerror(errno));
         terminate(EXIT_CODE_ERROR);
     }
+
+#if 1
+    {
+        int enable = 1;
+        if (setsockopt(server.sock, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+            debugPrint(DLEVEL_ERROR, "setsockopt(SO_REUSEADDR) failed");
+    }
+#endif
 
     memset(&serverAddr, 0, sizeof(serverAddr));
     serverAddr.sin_family = AF_INET;

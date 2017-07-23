@@ -32,13 +32,13 @@ export DEPFILE = depfile.mk
 ########################################
 export EXTENSION_LSQLITE3 = 1
 
-
 ########################################
 #
 #
 ########################################
 
-DIRS += src/lua
+DIRS += extensions/common
+DIRS += extensions/lua
 ifeq ($(EXTENSION_LSQLITE3), 1)
 	DIRS += extensions/lsqlite3
 endif

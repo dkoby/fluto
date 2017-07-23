@@ -28,9 +28,9 @@
 #include <stdint.h>
 #include <string.h>
 /* */
+#include <debug.h>
 #include "client.h"
 #include "common.h"
-#include "debug.h"
 #include "http.h"
 #include "lstate.h"
 #include "token.h"
@@ -141,7 +141,6 @@ int httpProcessRequest(struct client_t *client)
                 strncmp(tval, "GET", tlen)  == 0 ||
                 strncmp(tval, "POST", tlen) == 0
             ) {
-                /* TODO init lua "request" table */
 
             } else {
                 DEBUG_CLIENT(DLEVEL_NOISE, "(E) Unknown method %.*s", tlen, tval);
@@ -304,7 +303,7 @@ int httpProcessRequest(struct client_t *client)
 #endif
     return HTTP_ERROR_200_OK;
 error_eof:
-    DEBUG_CLIENT(DLEVEL_NOISE, "%s", "(E) Unexpected EOF");
+    DEBUG_CLIENT(DLEVEL_NOISE, "%s", "(W) EOF");
 error:
     return error;
 }

@@ -67,7 +67,7 @@ clean:
 	rm -f  $(TARGET_LIBLUA) $(TARGET_LUA) $(TARGET_LUAC) $(OBJS) $(DEPFILE)
 
 $(DEPFILE):
-	-$(CC) $(CFLAGS) -MM $(C_FILES) > $(DEPFILE)
+	$(CC) $(CFLAGS) -MM $(C_FILES) > $(DEPFILE)
 -include $(DEPFILE)
 depend: $(DEPFILE)
 
