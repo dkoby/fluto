@@ -920,6 +920,29 @@ static int _parseHeaderValue(struct client_t *client)
             }
             tokenDrop(token);
         }
+        lstateSetGlobalVal(client->luaState, _FNAME_CMP, "Host");
+        if (lstateCompareGlobalVals(client->luaState, _FNAME, _FNAME_CMP, _CMP_NO_CASE))
+        {
+            /*
+             * :::: RFC 7230
+             * ::   Host = "Host" ":" host [ ":" port ] ; Section 3.2.2
+             * ::
+             */
+
+            /*
+             * TODO
+             * Valid parsing of field-values.
+             * At this time only simple TOKEN_TYPE_ANY_NOT_CRLF parser used.
+             */
+            if (!(tval = TOKEN_GET(TOKEN_TYPE_ANY_NOT_CRLF)))
+            {
+                DEBUG_CLIENT(DLEVEL_NOISE, "%s", "(E) Empty \"Host\" value");
+                return HTTP_ERROR_400_BAD_REQUEST;
+            }
+            lstateSetRequestFieldL(client->luaState, "Host", tval, tlen);
+            tokenDrop(token);
+            break;
+        }
         /*
          * Skip values for any unknown fields.
          */
