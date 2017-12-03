@@ -109,7 +109,11 @@ error:
  */
 static int _getChars(char *buf, int len, void *arg)
 {
+#ifdef WINDOWS
+    return recv(((struct client_t *)arg)->sock, buf, len, 0);
+#else
     return read(((struct client_t *)arg)->sock, buf, len);
+#endif
 }
 /*
  * Called by server to stop client.

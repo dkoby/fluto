@@ -39,6 +39,7 @@
 #include "lscript/process.h"
 #include "lscript/util.h"
 #include "lstate.h"
+#include "version.h"
 
 #if 0
     #define DEBUG_THIS
@@ -103,6 +104,11 @@ int lstateInit0(struct client_t *client)
     lua_pushinteger(L, DLEVEL_INFO   ); lua_setglobal(L, "DLEVEL_INFO");
     lua_pushinteger(L, DLEVEL_NOISE  ); lua_setglobal(L, "DLEVEL_NOISE");
 
+    lua_pushinteger(L,
+            (MAJOR << 16) ||
+            (MINOR <<  8) ||
+            (BUILD <<  0)); lua_setglobal(L, "VERSION");
+
     lua_getglobal(L, "request");     /* [request]->TOS */
     lua_pushcfunction(L, _getContent); /* [request][getContent]->TOS */
     lua_setfield(L, -2, "getContent"); /* [request]->TOS */
@@ -113,7 +119,6 @@ int lstateInit0(struct client_t *client)
     lua_setfield(L, -2, "writeSock"); /* [response]->TOS */
     lua_pop(L, 1);                    /* ->TOS */
 
-    
 #if (1 && (defined DEBUG_THIS))
     /* Stack MUST be empty (gettop return 0). */
     debugPrint(DLEVEL_NOISE, "%s stack \"%d\" [sock %d].",
@@ -282,7 +287,11 @@ static int _writeSock(lua_State *L)
     lua_pop(L, 1);
 
     /* TODO raise error instead of boolean */
+#ifdef WINDOWS
+    if (send(client->sock, data, len, 0) < 0)
+#else
     if (write(client->sock, data, len) < 0)
+#endif
         luaL_error(L, "write to socket failed");
 
     return 0;

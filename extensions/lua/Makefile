@@ -12,9 +12,18 @@ TARGET_LUAC    = $(ROOT_DIR)/luac
 #
 ########################################
 CFLAGS += -DLUA_COMPAT_5_2 $(MYCFLAGS)
-CFLAGS += -DLUA_USE_LINUX
+ifdef BUILDWIN
+	ifdef BUILD_HOST
+		CFLAGS += -DLUA_USE_LINUX
+	else
+		CFLAGS += -DLUA_USE_WINDOWS
+	endif
+else
+	CFLAGS += -DLUA_USE_LINUX
+endif
 
-LDFLAGS += -ldl -lm -lreadline -ltermcap
+LDFLAGS += -ldl -lm
+#LDFLAGS += -lreadline -ltermcap
 ########################################
 #
 #
@@ -48,12 +57,13 @@ C_FILES += lstrlib.c
 C_FILES += ltable.c
 C_FILES += ltablib.c
 C_FILES += ltm.c
-C_FILES += lua.c
-C_FILES += luac.c
 C_FILES += lundump.c
 C_FILES += lutf8lib.c
 C_FILES += lvm.c
 C_FILES += lzio.c
+
+C_FILES += lua.c
+C_FILES += luac.c
 
 C_OBJS  = $(foreach obj,$(C_FILES) ,$(patsubst %c, %o, $(obj)))
 OBJS += $(C_OBJS)
@@ -61,10 +71,16 @@ OBJS += $(C_OBJS)
 #
 #
 ########################################
-.PHONY: all clean depend
-all: depend $(TARGET_LIBLUA) $(TARGET_LUA) $(TARGET_LUAC)
-clean:
-	rm -f  $(TARGET_LIBLUA) $(TARGET_LUA) $(TARGET_LUAC) $(OBJS) $(DEPFILE)
+.PHONY: lua_host lua_target clean depend
+all: lua_target
+
+lua_host: depend $(TARGET_LIBLUA) $(TARGET_LUA) $(TARGET_LUAC)
+lua_target: depend $(TARGET_LIBLUA)
+
+clean: clean_lib
+	rm -f $(TARGET_LUA) $(TARGET_LUAC) $(DEPFILE)
+clean_lib:
+	rm -f $(TARGET_LIBLUA) $(OBJS)
 
 $(DEPFILE):
 	$(CC) $(CFLAGS) -MM $(C_FILES) > $(DEPFILE)

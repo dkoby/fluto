@@ -25,9 +25,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * 
  */
+#ifdef WINDOWS
+    #include <winsock2.h>
+#else
+    #include <grp.h>
+    #include <pwd.h>
+#endif
+
 #include <errno.h>
-#include <grp.h>
-#include <pwd.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,14 +46,21 @@
 
 #define DEFAULT_PORT_NUMBER    8080
 static int portNumber = DEFAULT_PORT_NUMBER;
+#ifdef CONFIG_CHANGE_USER_SUPPORT
 static char *user = NULL;
+#endif
 static char *chDir = NULL;
+#ifndef WINDOWS
 static char *chRoot = NULL;
-struct passwd *pwd = NULL;;
+#endif
 
 static void _printHead()
 {
-    debugPrint(DLEVEL_SYS, "Fluto v" VERSION_STRING " (c) 2016-2017 Dmitry Kobylin.");
+    debugPrint(DLEVEL_SYS, "Fluto v" VERSION_STRING
+#ifndef WINDOWS
+            " (c) 2016-2017 Dmitry Kobylin."
+#endif
+            );
     debugPrint(DLEVEL_SYS, "");
 }
 static void _printHelp()
@@ -59,9 +71,13 @@ static void _printHelp()
     debugPrint(DLEVEL_SYS, "Options:");
     debugPrint(DLEVEL_SYS, "    -h          Print this help.");
     debugPrint(DLEVEL_SYS, "    -p<Port>    Bind to port.");
+#ifndef WINDOWS
     debugPrint(DLEVEL_SYS, "    -r=<Dir>    Do chroot to directory.");
+#endif
     debugPrint(DLEVEL_SYS, "    -D=<Dir>    Change to directory.");
+#ifdef CONFIG_CHANGE_USER_SUPPORT
     debugPrint(DLEVEL_SYS, "    -u<User>    User to change to after startup.");
+#endif
     debugPrint(DLEVEL_SYS, "    -d<L>       Debug level (0, 1, 2, 3, 4), default 3");
     debugPrint(DLEVEL_SYS, "                    0    SILENT ");
     debugPrint(DLEVEL_SYS, "                    1    ERROR  ");
@@ -69,11 +85,19 @@ static void _printHelp()
     debugPrint(DLEVEL_SYS, "                    3    INFO   ");
     debugPrint(DLEVEL_SYS, "                    4    NOISE  ");
     debugPrint(DLEVEL_SYS, "");
+    debugPrint(DLEVEL_SYS, "");
 
     exit(EXIT_CODE_ERROR);
 }
-static void _getPwd()
+
+#ifdef CONFIG_CHANGE_USER_SUPPORT
+static void _changeUser()
 {
+    struct passwd *pwd = NULL;;
+
+    if (!user)
+        return;
+
     if (getuid() == 0)
     {
         pwd = getpwnam(user);
@@ -83,11 +107,6 @@ static void _getPwd()
             exit(EXIT_CODE_ERROR);
         }
     }
-}
-static void _changeUser()
-{
-    if (!pwd)
-        return;
 
     if (setgroups(0, NULL) < 0)
     {
@@ -109,6 +128,8 @@ static void _changeUser()
         exit(EXIT_CODE_ERROR);
     }
 }
+#endif
+#ifndef WINDOWS
 static void _changeRoot()
 {
     if (!chRoot)
@@ -121,6 +142,7 @@ static void _changeRoot()
         debugPrint(DLEVEL_INFO, "Do chroot to \"%s\".", chRoot);
     }
 }
+#endif
 static void _changeDir()
 {
     if (!chDir)
@@ -168,20 +190,40 @@ int main(int argc, char **argv)
                 debugPrint(DLEVEL_ERROR, "Invalid value of \"-p\" option.");
                 terminate(EXIT_CODE_ERROR);
             }
+#ifndef WINDOWS
         } else if (strlen(*arg) >= 4 && strncmp("-r=", *arg, 3) == 0) {
             chRoot = *arg + 3;
+#endif
         } else if (strlen(*arg) >= 4 && strncmp("-D=", *arg, 3) == 0) {
             chDir = *arg + 3;
-        } else if (strlen(*arg) >= 3 && strncmp("-u", *arg, 2) == 0) {
+        }
+#ifdef CONFIG_CHANGE_USER_SUPPORT
+        else if (strlen(*arg) >= 3 && strncmp("-u", *arg, 2) == 0) {
             user = *arg + 2;
         }
+#endif
         arg++;
     }
 
-    _getPwd();
+#ifdef WINDOWS
+    {
+        WSADATA w;
+
+        if (WSAStartup(0x0101, &w) != 0)
+        {
+            debugPrint(DLEVEL_ERROR, "WSAStartup error");
+            return -1;
+        }
+    }
+#endif
+
+#ifndef WINDOWS
     _changeRoot();
+#endif
     _changeDir();
+#ifdef CONFIG_CHANGE_USER_SUPPORT
     _changeUser();
+#endif
 
     serverRun(portNumber);
 
@@ -194,6 +236,10 @@ int main(int argc, char **argv)
 void terminate(int code)
 {
     serverTerminate();
+#ifdef WINDOWS
+    ExitProcess(code);
+#else
     exit(code);
+#endif
 }
 

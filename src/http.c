@@ -929,7 +929,7 @@ static int _parseHeaderValue(struct client_t *client)
              * ::
              */
 
-            /*
+            /* 
              * TODO
              * Valid parsing of field-values.
              * At this time only simple TOKEN_TYPE_ANY_NOT_CRLF parser used.

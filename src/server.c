@@ -25,17 +25,23 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * 
  */
+#ifdef WINDOWS
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
+#else
+    #include <arpa/inet.h>
+    #include <sys/select.h>
+    #include <sys/socket.h>
+    #include <netinet/in.h>
+    #include <netdb.h>
+#endif
+
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <sys/select.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <arpa/inet.h>
 #include <signal.h>
 /* */
 #include <debug.h>
@@ -58,7 +64,11 @@ struct server_t {
 static struct server_t server;
 
 static struct client_t * _newClient();
-static void _sigAction(int sig, siginfo_t *siginfo, void *context);
+#ifdef WINDOWS
+    static void _sigAction(int sig);
+#else
+    static void _sigAction(int sig, siginfo_t *siginfo, void *context);
+#endif
 
 /*
  *
@@ -80,7 +90,10 @@ void serverRun(int portNumber)
     /*
      * Hook signal handler
      */
-#if 1
+#ifdef WINDOWS
+    signal(SIGINT, _sigAction);
+    signal(SIGTERM, _sigAction);
+#else
     {
         static struct sigaction act;
 
@@ -102,7 +115,9 @@ void serverRun(int portNumber)
     /*
      * XXX Ignore SIGPIPE.
      */
+#ifndef WINDOWS
     signal(SIGPIPE, SIG_IGN);    
+#endif
     /*
      * Open server socket.
      */
@@ -115,9 +130,15 @@ void serverRun(int portNumber)
 
 #if 1
     {
+#ifdef WINDOWS
+        int enable = 1;
+        if (setsockopt(server.sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&enable, sizeof(int)) < 0)
+            debugPrint(DLEVEL_ERROR, "setsockopt(SO_REUSEADDR) failed");
+#else
         int enable = 1;
         if (setsockopt(server.sock, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
             debugPrint(DLEVEL_ERROR, "setsockopt(SO_REUSEADDR) failed");
+#endif
     }
 #endif
 
@@ -298,9 +319,18 @@ void serverTerminate()
             if (numClients <= 0)
                 break;
             debugPrint(DLEVEL_INFO, "Wait clients...");
+#ifdef WINDOWS
+            Sleep(1000);
+#else
             sleep(1);
+#endif
         } while (nwait-- > 0);
     }
+
+#ifdef WINDOWS
+#warning XXX REMOVE THAT
+    ExitProcess(1);
+#endif
 
     server.clientList = NULL;
     server.numClients = 0;
@@ -368,7 +398,11 @@ void serverRemoveClient(struct client_t * client)
 /*
  * Signal handler.
  */
+#ifdef WINDOWS
+static void _sigAction(int sig)
+#else
 static void _sigAction(int sig, siginfo_t *siginfo, void *context)
+#endif
 {
     switch (sig)
     {
@@ -381,7 +415,11 @@ static void _sigAction(int sig, siginfo_t *siginfo, void *context)
             /* NOTREACHED */
 
             /* SA_RESETHAND specified for this handler, we can process as usual */
+#ifdef WINDOWS
+            /* XXX TODO */
+#else
             kill(getpid(), sig);
+#endif
             break;
         default:
             debugPrint(DLEVEL_WARNING,
